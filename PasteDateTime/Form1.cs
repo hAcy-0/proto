@@ -117,9 +117,16 @@ namespace PasteDateTime
         
         private void PastePlainText()
         {
-            string test = Clipboard.GetText();
-            Clipboard.SetText(test, TextDataFormat.Text);
-            SendKeys.SendWait("^v");
+            if (Clipboard.ContainsText())
+            {
+                string text = Clipboard.GetText();
+                Clipboard.SetText(text, TextDataFormat.Text);
+                SendKeys.SendWait("^v");
+            }
+            else
+            {
+                
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
