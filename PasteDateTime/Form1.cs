@@ -1,7 +1,9 @@
 ﻿using Gma.System.MouseKeyHook;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace PasteDateTime
@@ -60,9 +62,19 @@ namespace PasteDateTime
             pressedKeys.Add(e.KeyCode);
             if (pressedKeys.Contains(Keys.RShiftKey))
             {
-                PasteText(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+                Paste(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
                 e.Handled = true;
             }
+            // else if (pressedKeys.Contains(Keys.LControlKey) &&
+            //          pressedKeys.Contains(Keys.LMenu) &&
+            //          pressedKeys.Contains(Keys.P))
+            else if (pressedKeys.Contains(Keys.Escape) &&
+                     pressedKeys.Contains(Keys.F2))
+            {
+                PastePlainText();
+            }
+
+            // Debug.WriteLine(pressedKeys.Aggregate(string.Empty, (current, total) => current + total));
         }
         
         private void OnKeyUp(object sender, KeyEventArgs e)
@@ -70,7 +82,7 @@ namespace PasteDateTime
             pressedKeys.Remove(e.KeyCode);
         }
         
-        private void PasteText(string text)
+        private void Paste(string text)
         {
             IDataObject originalClipboardData = Clipboard.GetDataObject();
             bool originalDataHasText = Clipboard.ContainsText();
@@ -103,6 +115,13 @@ namespace PasteDateTime
             }
         }
         
+        private void PastePlainText()
+        {
+            string test = Clipboard.GetText();
+            Clipboard.SetText(test, TextDataFormat.Text);
+            SendKeys.SendWait("^v");
+        }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             notifyIcon.Visible = false;
