@@ -1,6 +1,7 @@
 ﻿using Gma.System.MouseKeyHook;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace PasteDateTime
@@ -57,20 +58,8 @@ namespace PasteDateTime
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
             pressedKeys.Add(e.KeyCode);
-            // if (pressedKeys.Contains(Keys.ControlKey) &&
-            //     pressedKeys.Contains(Keys.ShiftKey) &&
-            //     pressedKeys.Contains(Keys.D) &&
-            //     pressedKeys.Contains(Keys.D2) &&
-            //     pressedKeys.Contains(Keys.D3))
-            if (
-                pressedKeys.Contains(Keys.LShiftKey) &&
-                pressedKeys.Contains(Keys.Left) &&
-                pressedKeys.Contains(Keys.Right) &&
-                pressedKeys.Contains(Keys.Up) &&
-                pressedKeys.Contains(Keys.Down)
-            )
+            if (pressedKeys.Contains(Keys.RShiftKey))
             {
-                // Ctrl, Shift, 1, 2, 3이 동시에 눌렸을 때 실행할 코드
                 PasteText(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
                 e.Handled = true;
             }
@@ -83,8 +72,35 @@ namespace PasteDateTime
         
         private void PasteText(string text)
         {
-            Clipboard.SetText(text);
-            SendKeys.SendWait("^v");
+            IDataObject originalClipboardData = Clipboard.GetDataObject();
+            bool originalDataHasText = Clipboard.ContainsText();
+            bool originalDataHasImage = Clipboard.ContainsImage();
+            string originalText = originalDataHasText ? Clipboard.GetText() : string.Empty;
+            Image originalImage = originalDataHasImage ? Clipboard.GetImage() : null;
+
+            try
+            {
+                Clipboard.SetText(text);
+                SendKeys.SendWait("^v");
+            }
+            finally
+            {
+                if (originalClipboardData != null)
+                {
+                    if (originalDataHasText)
+                    {
+                        Clipboard.SetText(originalText);
+                    }
+                    else if (originalDataHasImage)
+                    {
+                        Clipboard.SetImage(originalImage);
+                    }
+                    else
+                    {
+                        Clipboard.SetDataObject(originalClipboardData);
+                    }
+                }
+            }
         }
         
         protected override void OnFormClosing(FormClosingEventArgs e)
