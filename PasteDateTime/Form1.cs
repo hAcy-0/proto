@@ -1,10 +1,9 @@
 ﻿using Gma.System.MouseKeyHook;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using Application = System.Windows.Forms.Application;
 
 namespace PasteDateTime
 {
@@ -12,7 +11,8 @@ namespace PasteDateTime
     {
         private NotifyIcon notifyIcon;
         private IKeyboardMouseEvents globalHook;
-        private HashSet<Keys> pressedKeys;
+        private LinkedList<Keys> pressedKeys;
+        private const int maxKeyCount = 7;
         
         public Form1()
         {
@@ -26,11 +26,11 @@ namespace PasteDateTime
                 ContextMenuStrip = CreateContextMenu()
             };
             
-            pressedKeys = new HashSet<Keys>();
+            pressedKeys = new LinkedList<Keys>();
             
             globalHook = Hook.GlobalEvents();
             globalHook.KeyDown += OnKeyDown;
-            globalHook.KeyUp += OnKeyUp;
+            // globalHook.KeyUp += OnKeyUp;
             
             WindowState = FormWindowState.Minimized;
             ShowInTaskbar = false;
@@ -59,78 +59,22 @@ namespace PasteDateTime
         
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
-            pressedKeys.Add(e.KeyCode);
-            if (pressedKeys.Contains(Keys.LShiftKey)
-                && pressedKeys.Contains(Keys.RShiftKey))
+            pressedKeys.AddLast(e.KeyCode);
+            if (pressedKeys.Count > maxKeyCount)
+                pressedKeys.RemoveFirst();
+            
+            if (e.KeyCode == Keys.Enter)
             {
-                Paste(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
-                e.Handled = true;
-            }
-            // else if (pressedKeys.Contains(Keys.LControlKey) &&
-            //          pressedKeys.Contains(Keys.LMenu) &&
-            //          pressedKeys.Contains(Keys.P))
-            else if (pressedKeys.Contains(Keys.Escape) &&
-                     pressedKeys.Contains(Keys.F2))
-            {
-                PastePlainText();
-            }
-
-            // Debug.WriteLine(pressedKeys.Aggregate(string.Empty, (current, total) => current + total));
-        }
-        
-        private void OnKeyUp(object sender, KeyEventArgs e)
-        {
-            pressedKeys.Remove(e.KeyCode);
-        }
-        
-        private void Paste(string text)
-        {
-            IDataObject originalClipboardData = Clipboard.GetDataObject();
-            bool originalDataHasText = Clipboard.ContainsText();
-            bool originalDataHasImage = Clipboard.ContainsImage();
-            string originalText = originalDataHasText ? Clipboard.GetText() : string.Empty;
-            Image originalImage = originalDataHasImage ? Clipboard.GetImage() : null;
-
-            try
-            {
-                Clipboard.SetText(text);
-                SendKeys.SendWait("^v");
-                // Debug.WriteLine(text);
-            }
-            finally
-            {
-                // if (originalClipboardData != null)
-                // {
-                //     if (originalDataHasText)
-                //     {
-                //         Clipboard.SetText(originalText);
-                //     }
-                //     else if (originalDataHasImage)
-                //     {
-                //         Clipboard.SetImage(originalImage);
-                //     }
-                //     else
-                //     {
-                //         Clipboard.SetDataObject(originalClipboardData);
-                //     }
-                // }
+                string pressedKeysString = string.Join("", pressedKeys.ToArray().Select(k => k.ToString()));
+                if (pressedKeysString == "DATELShiftKeyD4Return") //date$
+                {
+                    Clipboard.SetText(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+                    SendKeys.SendWait("^v");
+                    e.Handled = true;
+                }
             }
         }
         
-        private void PastePlainText()
-        {
-            if (Clipboard.ContainsText())
-            {
-                string text = Clipboard.GetText();
-                Clipboard.SetText(text, TextDataFormat.Text);
-                SendKeys.SendWait("^v");
-            }
-            else
-            {
-                
-            }
-        }
-
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             notifyIcon.Visible = false;
