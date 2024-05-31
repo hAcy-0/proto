@@ -68,7 +68,7 @@ namespace PasteDateTime
                 string pressedKeysString = string.Join("", pressedKeys.ToArray().Select(k => k.ToString()));
                 if (pressedKeysString == "DATELShiftKeyD4Return") //date$
                 {
-                    Clipboard.SetText(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+                    Clipboard.SetText(DateTime.Now.ToString("yyyyMMdd HHmm"));
                     SendKeys.SendWait("+{LEFT 5}");
                     SendKeys.SendWait("^v");
                     e.Handled = true;
