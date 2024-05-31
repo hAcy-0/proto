@@ -60,7 +60,8 @@ namespace PasteDateTime
         private void OnKeyDown(object sender, KeyEventArgs e)
         {
             pressedKeys.Add(e.KeyCode);
-            if (pressedKeys.Contains(Keys.RShiftKey))
+            if (pressedKeys.Contains(Keys.LShiftKey)
+                && pressedKeys.Contains(Keys.RShiftKey))
             {
                 Paste(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
                 e.Handled = true;
@@ -94,24 +95,25 @@ namespace PasteDateTime
             {
                 Clipboard.SetText(text);
                 SendKeys.SendWait("^v");
+                // Debug.WriteLine(text);
             }
             finally
             {
-                if (originalClipboardData != null)
-                {
-                    if (originalDataHasText)
-                    {
-                        Clipboard.SetText(originalText);
-                    }
-                    else if (originalDataHasImage)
-                    {
-                        Clipboard.SetImage(originalImage);
-                    }
-                    else
-                    {
-                        Clipboard.SetDataObject(originalClipboardData);
-                    }
-                }
+                // if (originalClipboardData != null)
+                // {
+                //     if (originalDataHasText)
+                //     {
+                //         Clipboard.SetText(originalText);
+                //     }
+                //     else if (originalDataHasImage)
+                //     {
+                //         Clipboard.SetImage(originalImage);
+                //     }
+                //     else
+                //     {
+                //         Clipboard.SetDataObject(originalClipboardData);
+                //     }
+                // }
             }
         }
         
